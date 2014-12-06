@@ -6,17 +6,22 @@ public class SingleJointBehavior : MonoBehaviour {
 	public int GeneColor;
 	public float ChildDistant = 1.5f;
 	public Vector3 Direction;
-
 	public Transform genParent;
+
+	public GameObject [] Children = new GameObject [10];
+	public GameObject [] Parents = new GameObject [5];
+	public int Ccount = 0,Pcount = 0;
+	public float WidthInit;
+
 	GameObject radio, temp;
 	Transform potential;
-	bool emitting;
-	float Speed = 3;
+	public bool emitting, Growing;
+	float Speed = 1;
 	public int Value;
 	// Use this for initialization
 	void Start () {
-		Value = 5;
-		radio = GameObject.FindWithTag ("EmitRadio");
+		Value = 4;
+		//radio = GameObject.FindWithTag ("EmitRadio");
 		potential = transform.GetChild (0);
 	}
 	
@@ -25,7 +30,7 @@ public class SingleJointBehavior : MonoBehaviour {
 		float scalar = 0.25f + Value / 20f;
 		transform.localScale = new Vector3 (scalar, scalar, scalar);
 
-		potential.localScale = new Vector3 (1f/ scalar, 1f/ scalar, 1f/ scalar);
+		potential.localScale = new Vector3 (1.2f/ scalar, 1.2f/ scalar, 1.2f/ scalar);
 		if(Value >= 20){
 			Grow();
 		}
@@ -41,7 +46,7 @@ public class SingleJointBehavior : MonoBehaviour {
 		//gameObject.collider.isTrigger = true;
 		genParent = parent;
 		RaycastHit hit;
-		if(!Physics.Raycast (parent.position + Vector3.Lerp(Vector3.zero, dir, 0.5f), dir, out hit, ChildDistant / 2f)){
+		if(!Physics.Raycast (parent.position + Vector3.Lerp(Vector3.zero, dir, 0.8f), dir, out hit, ChildDistant / 4f)){
 			emitting = true;
 			Direction = dir;
 			return true;
@@ -58,23 +63,121 @@ public class SingleJointBehavior : MonoBehaviour {
 			}
 		}
 	}
+	public void GetValue(int v){
+		//Debug.Log (gameObject.name + " GetValue: " + v);
+		if(!Growing){
+			Value += v;
+			if(Value <= 0){
+				StartDie ();
+			}
+		}
+		//There should be effect
+	}
+	public void GetParentConnect(GameObject PConnect, float width){
+		WidthInit = width; 
+		Parents [Pcount++] = PConnect;
+	}
+	public float GetChildConnect(GameObject CConnect){
+		Children [Ccount++] = CConnect;
+		return WidthInit;
+	}
+	public void StartDie(){
+		for(int i = 0;i<Pcount;i++){
+			Parents[i].GetComponent<ConnectControl>().StartDie(1);
+		}
+		for(int i=0;i<Ccount;i++){
+			Children[i].GetComponent<ConnectControl>().StartDie(0);
+		}
+		Debug.Log ("StartDie: " + gameObject.name);
+		Destroy (gameObject);
+	}
+	public void ParentConnectDie(GameObject pc){
+
+		if (Pcount == 1){
+			Pcount = 0;
+			Debug.Log ("ParentDie: " + gameObject.name);
+			StartDie ();
+		}
+		else{
+			for(int i=0;i<Pcount-1;i++){
+				if(pc == Parents[i]){
+					Parents[i] = Parents[Pcount-1];
+					break;
+				}
+			}
+			Pcount--;
+		}
+	}
+	public void ChildConnectDie(GameObject cc){
+		for(int i=0;i<Ccount-1;i++){
+			if(cc == Children[i]){
+				Children[i] = Children[Ccount-1];
+			}
+		}
+		Ccount--;
+	}
+	public void Reset(){
+		Pcount = 0;
+		Ccount = 0;
+		Growing = false;
+	}
+	void OnTriggerEnter(Collider c){
+		if(emitting){
+			if(c.tag == "GeneBase" && c.gameObject.transform != genParent){
+				if(c.gameObject.GetComponent<SingleJointBehavior>().GeneColor == GeneColor){
+					c.gameObject.GetComponent<SingleJointBehavior>().GetValue(Value);
+					if(checkOverlap(c.gameObject))
+						Parents[0].GetComponent<ConnectControl>().ResetConnect(c.gameObject);
+					else
+						StartDie();
+					//Destroy(gameObject);
+				}
+				else{
+					c.gameObject.GetComponent<SingleJointBehavior>().GetValue(-Value);
+					StartDie();
+					//Destroy(gameObject);
+				}
+			}
+		}
+	}
+	bool checkOverlap(GameObject target){
+		for(int i = 0;i<target.GetComponent<SingleJointBehavior>().Pcount;i++){
+			if(target.GetComponent<SingleJointBehavior>().Parents[i].GetComponent<ConnectControl>()._from ==
+			   Parents[0].GetComponent<ConnectControl>()._from){
+				return false;
+			}
+		}
+		return true;
+	}
+	void GrowEnd(){
+		Growing = false;
+	}
 	void Grow(){
+		Growing = true;
 		Value = 15;
 		Vector3 childPos = ChildDirection ();
 		temp = Instantiate (gameObject, transform.position, Quaternion.identity) as GameObject;
 		temp.transform.parent = GameObject.Find("Base").transform;
+		temp.GetComponent<SingleJointBehavior> ().Reset ();
 		int n = 0;
+		Invoke ("GrowEnd", 1);
 		while(n < 20){
 			if(temp.GetComponent<SingleJointBehavior> ().Emit (childPos, transform)){
+				 
+				GameObject temp2 = Instantiate(Parents[0], transform.position + new Vector3(0, 0, -100), Quaternion.identity) as GameObject;
+				temp2.GetComponent<ConnectControl>().SetConnect(gameObject, temp);
+				Debug.Log ("CreateLine: " + temp2.name);
 				return;
 			}
 			n++;
 		}
+		Destroy (temp);
 		Value = 20;
+
 	}
 	Vector3 ChildDirection(){
 		Vector3 parentPos = transform.position;
-		float angle = Random.Range (-60f, 60f);
+		float angle = Random.Range (-90f, 90f);
 		//Debug.Log (angle);
 		Vector3 baseVec = parentPos.normalized;
 		float a = angle_360 (Vector3.right, baseVec);
@@ -85,27 +188,6 @@ public class SingleJointBehavior : MonoBehaviour {
 		//Debug.Log (childPos);
 		return childPos;
 	}
-	public void GetValue(int v){
-		Value += v;
-		if(Value <= 0){
-			Destroy(gameObject);
-		}
-		//There should be effect
-	}
-	void OnTriggerEnter(Collider c){
-		if(emitting){
-			if(c.tag == "GeneBase" && c.gameObject.transform != genParent){
-				if(c.gameObject.GetComponent<SingleJointBehavior>().GeneColor == GeneColor){
-					c.gameObject.GetComponent<SingleJointBehavior>().GetValue(Value);
-					Destroy(gameObject);
-				}
-				else{
-					c.gameObject.GetComponent<SingleJointBehavior>().GetValue(-Value);
-					Destroy(gameObject);
-				}
-			}
-		}
-	}
 	float angle_360(Vector3 from_, Vector3 to_){  
 		Vector3 v3 = Vector3.Cross(from_,to_);  
 		if(v3.z > 0)  
@@ -113,5 +195,4 @@ public class SingleJointBehavior : MonoBehaviour {
 		else  
 			return 360-Vector3.Angle(from_,to_);  
 	}  
-
 }

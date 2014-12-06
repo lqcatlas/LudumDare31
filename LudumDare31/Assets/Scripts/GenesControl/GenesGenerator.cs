@@ -15,11 +15,11 @@ public class GenesGenerator : MonoBehaviour {
 	
 	// Update is called once per frame
 	void Update () {
-		if(ready){
-			ready = false;
-			launchGene(1);
-			Invoke("cooldown", Interval);
-		}
+//		if(ready){
+//			ready = false;
+//			launchGene(1);
+//			Invoke("cooldown", Interval);
+//		}
 		if(Input.GetKeyDown("e")){
 			launchGene(1);
 		}

@@ -48,6 +48,7 @@
   <ItemGroup>
      <Compile Include="Assets\Scripts\GenesControl\GeneBehavior.cs" />
      <Compile Include="Assets\Scripts\GenesControl\GenesGenerator.cs" />
+     <Compile Include="Assets\Scripts\VirusControl\ConnectControl.cs" />
      <Compile Include="Assets\Scripts\VirusControl\Control.cs" />
      <Compile Include="Assets\Scripts\VirusControl\SingleJointBehavior.cs" />
      <Compile Include="Assets\Scripts\VirusControl\VirusValues.cs" />

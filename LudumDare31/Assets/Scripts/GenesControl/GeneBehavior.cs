@@ -22,7 +22,7 @@ public class GeneBehavior : MonoBehaviour {
 		Speed = s;
 	}
 	void OnTriggerEnter(Collider c){
-		Debug.Log ("TriggerEnter");
+		//Debug.Log ("TriggerEnter");
 		if(c.tag == "GeneBase"){
 			if(c.GetComponent<SingleJointBehavior>().GeneColor == GeneColor){
 				c.GetComponent<SingleJointBehavior>().GetValue(Value);
@@ -32,6 +32,17 @@ public class GeneBehavior : MonoBehaviour {
 				c.GetComponent<SingleJointBehavior>().GetValue(-Value);
 				Destroy(gameObject);
 			}
+		}
+		if(c.tag == "GeneLine"){
+			if(c.GetComponent<ConnectControl>()._to.GetComponent<SingleJointBehavior>().GeneColor == GeneColor){
+				c.GetComponent<ConnectControl>().GetValue(Value);
+				Destroy(gameObject);
+			}
+			else{
+				c.GetComponent<ConnectControl>().GetValue(-Value);
+				Destroy(gameObject);
+			}
+
 		}
 	}
 }
