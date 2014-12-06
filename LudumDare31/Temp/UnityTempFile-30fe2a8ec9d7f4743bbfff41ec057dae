@@ -39,6 +39,10 @@
 -define:UNITY_EDITOR_WIN
 -define:UNITY_TEAM_LICENSE
 -define:UNITY_PRO_LICENSE
+Assets/Scripts/GenesControl/GeneBehavior.cs
+Assets/Scripts/GenesControl/GenesGenerator.cs
+Assets/Scripts/VirusControl/Control.cs
+Assets/Scripts/VirusControl/SingleJointBehavior.cs
 Assets/Scripts/VirusControl/VirusValues.cs
 -r:D:/GameDevelopment/Unity/Editor/Data/Mono\lib/mono/unity\System.Runtime.Serialization.dll
 -r:D:/GameDevelopment/Unity/Editor/Data/Mono\lib/mono/unity\System.Xml.Linq.dll

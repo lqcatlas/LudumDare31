@@ -2,7 +2,7 @@
 using System.Collections;
 
 public class VirusValues : MonoBehaviour {
-
+	public static float Radius = 1.5f;
 	// Use this for initialization
 	void Start () {
 	
@@ -12,4 +12,10 @@ public class VirusValues : MonoBehaviour {
 	void Update () {
 	
 	}
+	public void updateRadius(Vector3 pos){
+		if(pos.magnitude > Radius){
+			Radius = pos.magnitude;
+		}
+	}
+
 }
