@@ -180,7 +180,7 @@ public class SingleJointBehavior : MonoBehaviour {
 		if(emitting){
 			if(c.tag == "GeneBase" && c.gameObject.transform != genParent){
 				if(c.gameObject.GetComponent<SingleJointBehavior>().GeneColor == GeneColor){
-					c.gameObject.GetComponent<SingleJointBehavior>().GetValueWithoutScore(Value);
+					c.gameObject.GetComponent<SingleJointBehavior>().GetValue(Value);
 					if(checkOverlap(c.gameObject))
 						Parents[0].GetComponent<ConnectControl>().ResetConnect(c.gameObject);
 					else

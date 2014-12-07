@@ -49,12 +49,15 @@
      <Compile Include="Assets\Scripts\GenesControl\GeneBehavior.cs" />
      <Compile Include="Assets\Scripts\GenesControl\GeneratorControl.cs" />
      <Compile Include="Assets\Scripts\GenesControl\GenesGenerator.cs" />
-     <Compile Include="Assets\Scripts\GenesControl\LevelControl.cs" />
      <Compile Include="Assets\Scripts\GenesControl\ModeIcon.cs" />
+     <Compile Include="Assets\Scripts\SceneControl\Intro.cs" />
+     <Compile Include="Assets\Scripts\SceneControl\LevelControl.cs" />
+     <Compile Include="Assets\Scripts\SceneControl\TimerControl.cs" />
      <Compile Include="Assets\Scripts\VFX\DeathFX.cs" />
      <Compile Include="Assets\Scripts\VFX\Increasing.cs" />
      <Compile Include="Assets\Scripts\VFX\PopScore.cs" />
      <Compile Include="Assets\Scripts\VFX\Shaking.cs" />
+     <Compile Include="Assets\Scripts\VFX\TextBlink.cs" />
      <Compile Include="Assets\Scripts\VirusControl\ConnectControl.cs" />
      <Compile Include="Assets\Scripts\VirusControl\Control.cs" />
      <Compile Include="Assets\Scripts\VirusControl\SingleJointBehavior.cs" />

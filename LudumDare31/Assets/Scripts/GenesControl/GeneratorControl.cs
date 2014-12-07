@@ -11,7 +11,7 @@ public class GeneratorControl : MonoBehaviour {
 	
 	// Update is called once per frame
 	void Update () {
-		if(Generators[1].activeInHierarchy == true){
+		if(Generators[0].activeInHierarchy == true){
 			if(VirusValues.Radius > 4 && Generators[1].activeInHierarchy == false){
 				Generators[1].SetActive(true);
 				GenesGenerator.Interval = 4;
