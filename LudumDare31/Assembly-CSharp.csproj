@@ -50,6 +50,7 @@
      <Compile Include="Assets\Scripts\GenesControl\GeneratorControl.cs" />
      <Compile Include="Assets\Scripts\GenesControl\GenesGenerator.cs" />
      <Compile Include="Assets\Scripts\GenesControl\LevelControl.cs" />
+     <Compile Include="Assets\Scripts\GenesControl\ModeIcon.cs" />
      <Compile Include="Assets\Scripts\VFX\DeathFX.cs" />
      <Compile Include="Assets\Scripts\VFX\Increasing.cs" />
      <Compile Include="Assets\Scripts\VFX\PopScore.cs" />

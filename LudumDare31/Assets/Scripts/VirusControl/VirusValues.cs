@@ -49,7 +49,7 @@ public class VirusValues : MonoBehaviour {
 		}
 	}
 	void RdInitValue(){
-		int v = Random.Range (250, 600);
+		int v = Random.Range (25, 60);
 		InitBases [0].GetComponent<SingleJointBehavior> ().Value = v;
 		colorPoints [0] += v;
 
