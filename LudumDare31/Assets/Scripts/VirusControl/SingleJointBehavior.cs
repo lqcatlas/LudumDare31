@@ -8,6 +8,7 @@ public class SingleJointBehavior : MonoBehaviour {
 	public Vector3 Direction;
 	public Transform genParent;
 	public PopScore text;
+	public GameObject deathFX;
 
 	public GameObject [] Children = new GameObject [10];
 	public GameObject [] Parents = new GameObject [5];
@@ -17,7 +18,7 @@ public class SingleJointBehavior : MonoBehaviour {
 	GameObject radio, temp;
 	Transform potential;
 	public bool emitting, Growing, dying;
-	float Speed = 1, AnimScalar;
+	float Speed = 2f, AnimScalar;
 	Vector3 Offset, originalPos;
 	public int Value;
 	// Use this for initialization
@@ -31,7 +32,9 @@ public class SingleJointBehavior : MonoBehaviour {
 	// Update is called once per frame
 	void Update () {
 		float scalar = 0.25f + Value / 50f;
-
+		if(scalar > 1.25f){
+			scalar = 1.25f;
+		}
 		AnimScalar = GetComponent<Increasing> ().AnimScalar;
 		transform.localScale = new Vector3 (scalar, scalar, scalar) * AnimScalar;
 		potential.localScale = new Vector3 (1.2f/ scalar, 1.2f/ scalar, 1.2f/ scalar);
@@ -51,7 +54,7 @@ public class SingleJointBehavior : MonoBehaviour {
 			transform.localPosition = originalPos + Offset;
 		}
 
-		if(Value >= 50){
+		if(Value >= 50 && !Growing){
 			Grow();
 		}
 
@@ -59,7 +62,7 @@ public class SingleJointBehavior : MonoBehaviour {
 	public void GetValue(int v){
 		GameObject tmp;
 		//Debug.Log (gameObject.name + " GetValue: " + v);
-		if(!Growing && !emitting){
+		//if(!Growing && !emitting){
 			if(v>0){
 				GetComponent<Increasing>().playAnim();
 
@@ -68,7 +71,7 @@ public class SingleJointBehavior : MonoBehaviour {
 				tmp.SetActive(true);
 			}
 			else{
-				v = v + VirusValues.RedLevel * 2;
+				v = v + VirusValues.BlueLevel * 2;
 				originalPos = transform.localPosition;
 				GetComponent<Shaking>().playAnim();
 
@@ -81,14 +84,14 @@ public class SingleJointBehavior : MonoBehaviour {
 			if(Value <= 0){
 				StartDie ();
 			}
-		}
+		//}
 		//There should be effect
 	}
 
 	public void GetValueWithoutScore(int v){
 		GameObject tmp;
 		//Debug.Log (gameObject.name + " GetValue: " + v);
-		if(!Growing && !emitting){
+		//if(!Growing && !emitting){
 			if(v>0){
 				GetComponent<Increasing>().playAnim();
 				
@@ -113,7 +116,7 @@ public class SingleJointBehavior : MonoBehaviour {
 			if(Value <= 0){
 				StartDie ();
 			}
-		}
+		//}
 		//There should be effect
 	}
 
@@ -136,7 +139,9 @@ public class SingleJointBehavior : MonoBehaviour {
 			for(int i=0;i<Ccount;i++){
 				Children[i].GetComponent<ConnectControl>().StartDie(0);
 			}
-			Debug.Log ("StartDie: " + gameObject.name);
+			//Debug.Log ("StartDie: " + gameObject.name);
+			GameObject tmp = Instantiate (deathFX, transform.position, Quaternion.identity) as GameObject;
+			tmp.GetComponent<DeathFX> ().FX ();
 			Destroy (gameObject);
 		}
 	}
@@ -192,7 +197,7 @@ public class SingleJointBehavior : MonoBehaviour {
 	}
 	bool checkOverlap(GameObject target){
 		for(int i = 0;i<target.GetComponent<SingleJointBehavior>().Pcount;i++){
-			if(target.GetComponent<SingleJointBehavior>().Parents[i].GetComponent<ConnectControl>()._from){
+			if(target.GetComponent<SingleJointBehavior>().Parents[i]){
 				if(target.GetComponent<SingleJointBehavior>().Parents[i].GetComponent<ConnectControl>()._from ==
 				   Parents[0].GetComponent<ConnectControl>()._from){
 					return false;
@@ -238,7 +243,7 @@ public class SingleJointBehavior : MonoBehaviour {
 			if(temp.GetComponent<SingleJointBehavior>().Emit (childPos, transform)){
 				//temp.GetComponent<SingleJointBehavior>().genParent = transform;
 				//int n = 0;
-				Invoke ("GrowEnd", 1);
+				Invoke ("GrowEnd", 1.5f);
 				GameObject temp2 = Instantiate(Parents[0], transform.position + new Vector3(0, 0, -100), Quaternion.identity) as GameObject;
 				temp2.GetComponent<ConnectControl>().SetConnect(gameObject, temp);
 				Debug.Log ("CreateLine: " + temp2.name);

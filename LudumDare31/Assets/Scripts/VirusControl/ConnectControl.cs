@@ -5,6 +5,7 @@ public class ConnectControl : MonoBehaviour {
 	public GameObject _from, _to;
 	public float WidthInit;
 	public bool isBase;
+	public GameObject deathFX;
 	//public PopScore text;
 
 	bool life, increasing, decreasing;
@@ -58,6 +59,8 @@ public class ConnectControl : MonoBehaviour {
 				_from.GetComponent<SingleJointBehavior>().ChildConnectDie(gameObject);
 			}
 		}
+		GameObject tmp = Instantiate (deathFX, transform.position, Quaternion.identity) as GameObject;
+		tmp.GetComponent<DeathFX> ().FX ();
 		Destroy (gameObject);
 	}
 	public void GetValue(int v){
@@ -80,7 +83,7 @@ public class ConnectControl : MonoBehaviour {
 		if(!isBase)
 			WidthInit = parent.GetComponent<SingleJointBehavior> ().GetChildConnect (gameObject);
 		child.GetComponent<SingleJointBehavior> ().GetParentConnect (gameObject, WidthInit);
-		transform.localScale = new Vector3(transform.localScale.x, WidthInit*VirusValues.Red_WidthScalar, 1);
+		transform.localScale = new Vector3(transform.localScale.x, WidthInit*VirusValues.Blue_WidthScalar, 1);
 		life = true;
 		isBase = false;
 	}

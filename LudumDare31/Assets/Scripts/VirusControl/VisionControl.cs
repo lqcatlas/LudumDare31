@@ -10,6 +10,6 @@ public class VisionControl : MonoBehaviour {
 	
 	// Update is called once per frame
 	void Update () {
-		transform.localScale = Vector3.one * 1.2f * VirusValues.Blue_Vision;
+		transform.localScale = Vector3.one * 1.2f * VirusValues.Red_Vision;
 	}
 }
