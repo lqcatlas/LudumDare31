@@ -5,9 +5,14 @@ public class ConnectControl : MonoBehaviour {
 	public GameObject _from, _to;
 	public float WidthInit;
 	public bool isBase;
-	bool life;
+	//public PopScore text;
+
+	bool life, increasing, decreasing;
+	float AnimScalar;
+	Vector3 Offset, originalPos;
 	// Use this for initialization
 	void Start () {
+		originalPos = transform.position;
 		if (isBase){
 			SetConnect (_from, _to);
 		}
@@ -15,24 +20,43 @@ public class ConnectControl : MonoBehaviour {
 	
 	// Update is called once per frame
 	void Update () {
-		if(life){
+		//Debug.Log (gameObject.name + ": " + transform.position);
+		//Debug.Log (gameObject.name + ": " +"To: "+ (transform.position - _to.transform.position).magnitude);
+		//Debug.Log (gameObject.name + ": " +"From: " + (transform.position - _from.transform.position).magnitude);
+//		if((transform.position - _to.transform.position).magnitude > 2 ||
+//		   (transform.position - _from.transform.position).magnitude > 2){
+//			life = false;
+//			StartDie(0);
+//		}
+		if(life && _to && _from && _to != _from ){
 			Vector3 v = _to.transform.position - _from.transform.position;
 			float dis = v.magnitude;
-			transform.localScale = new Vector3(dis, transform.localScale.y, 1);
+			AnimScalar = GetComponent<Increasing> ().AnimScalar;
+			transform.localScale = new Vector3(dis, WidthInit * AnimScalar, 1);
+
 			float angle = angle_360 (Vector3.right, v.normalized);
 			transform.eulerAngles = new Vector3(0, 0, angle);
 			transform.position = Vector3.Lerp (_from.transform.position, _to.transform.position, 0.5f); 
+			originalPos = transform.localPosition;
+
+			Offset = GetComponent<Shaking> ().offset;
+			transform.localPosition = originalPos + Offset;
+		}
+		else{
+			life = false;
+			StartDie(0);
 		}
 
 	}
 	public void StartDie(int fromwho){
 		life = false;
-		if(fromwho == 0){
+		if(_to != null){
 			_to.GetComponent<SingleJointBehavior>().ParentConnectDie(gameObject);
 		}
-		else{
-			if(GameObject.Find ("Base") != _from)
+		if(_from != null){
+			if(GameObject.Find ("Base") != _from){
 				_from.GetComponent<SingleJointBehavior>().ChildConnectDie(gameObject);
+			}
 		}
 		Destroy (gameObject);
 	}
@@ -41,6 +65,14 @@ public class ConnectControl : MonoBehaviour {
 			_from.GetComponent<SingleJointBehavior> ().GetValue(v / 2);
 		}
 		_to.GetComponent<SingleJointBehavior> ().GetValue (v / 2);
+		if(v > 0){
+			GetComponent<Increasing>().playAnim();
+		}
+		else{
+			originalPos = transform.position;
+			GetComponent<Shaking>().playAnim();
+		}
+
 	}
 	public void SetConnect(GameObject parent, GameObject child){
 		_from = parent;
@@ -54,9 +86,11 @@ public class ConnectControl : MonoBehaviour {
 	}
 	public void ResetConnect(GameObject child){
 		//_from = parent;
+		life = false;
 		_to.GetComponent<SingleJointBehavior> ().ParentConnectDie (gameObject);
 		_to = child;
 		child.GetComponent<SingleJointBehavior> ().GetParentConnect (gameObject, WidthInit);
+		life = true;
 		//transform.localScale = new Vector3(transform.localScale.x, WidthInit*VirusValues.Red_WidthScalar, 1);
 		//life = true;
 	}

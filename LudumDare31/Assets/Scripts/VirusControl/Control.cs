@@ -2,7 +2,7 @@
 using System.Collections;
 
 public class Control : MonoBehaviour {
-	public float RotateSpeed = 20;
+	public float RotateSpeed;
 	// Use this for initialization
 	void Start () {
 	
@@ -10,6 +10,7 @@ public class Control : MonoBehaviour {
 	
 	// Update is called once per frame
 	void Update () {
+		RotateSpeed = VirusValues.Green_RotateSpeed;
 		if(Input.GetKey(KeyCode.LeftArrow)){
 			transform.Rotate(new Vector3(0, 0, RotateSpeed * Time.deltaTime));
 		}

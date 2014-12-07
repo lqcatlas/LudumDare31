@@ -13,7 +13,9 @@ public class GeneBehavior : MonoBehaviour {
 	// Update is called once per frame
 	void Update () {
 		transform.Translate (Direction * Speed * Time.deltaTime);
-	
+		if(transform.position.magnitude > 50){
+			Destroy(gameObject);
+		}
 	}
 	public void setDirection(Vector3 dir){
 		Direction = dir;

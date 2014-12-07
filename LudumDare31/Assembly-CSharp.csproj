@@ -47,11 +47,16 @@
   </ItemGroup>
   <ItemGroup>
      <Compile Include="Assets\Scripts\GenesControl\GeneBehavior.cs" />
+     <Compile Include="Assets\Scripts\GenesControl\GeneratorControl.cs" />
      <Compile Include="Assets\Scripts\GenesControl\GenesGenerator.cs" />
+     <Compile Include="Assets\Scripts\VFX\Increasing.cs" />
+     <Compile Include="Assets\Scripts\VFX\PopScore.cs" />
+     <Compile Include="Assets\Scripts\VFX\Shaking.cs" />
      <Compile Include="Assets\Scripts\VirusControl\ConnectControl.cs" />
      <Compile Include="Assets\Scripts\VirusControl\Control.cs" />
      <Compile Include="Assets\Scripts\VirusControl\SingleJointBehavior.cs" />
      <Compile Include="Assets\Scripts\VirusControl\VirusValues.cs" />
+     <Compile Include="Assets\Scripts\VirusControl\VisionControl.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

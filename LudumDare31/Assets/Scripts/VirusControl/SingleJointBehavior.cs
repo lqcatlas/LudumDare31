@@ -7,6 +7,7 @@ public class SingleJointBehavior : MonoBehaviour {
 	public float ChildDistant = 1.5f;
 	public Vector3 Direction;
 	public Transform genParent;
+	public PopScore text;
 
 	public GameObject [] Children = new GameObject [10];
 	public GameObject [] Parents = new GameObject [5];
@@ -15,38 +16,200 @@ public class SingleJointBehavior : MonoBehaviour {
 
 	GameObject radio, temp;
 	Transform potential;
-	public bool emitting, Growing;
-	float Speed = 1;
+	public bool emitting, Growing, dying;
+	float Speed = 1, AnimScalar;
+	Vector3 Offset, originalPos;
 	public int Value;
 	// Use this for initialization
 	void Start () {
-		Value = 4;
+		originalPos = transform.position;
+		Value = 19;
 		//radio = GameObject.FindWithTag ("EmitRadio");
 		potential = transform.GetChild (0);
 	}
 	
 	// Update is called once per frame
 	void Update () {
-		float scalar = 0.25f + Value / 20f;
-		transform.localScale = new Vector3 (scalar, scalar, scalar);
+		float scalar = 0.25f + Value / 50f;
 
+		AnimScalar = GetComponent<Increasing> ().AnimScalar;
+		transform.localScale = new Vector3 (scalar, scalar, scalar) * AnimScalar;
 		potential.localScale = new Vector3 (1.2f/ scalar, 1.2f/ scalar, 1.2f/ scalar);
-		if(Value >= 20){
-			Grow();
-		}
+
 		if(emitting){
 			transform.Translate(Direction * Time.deltaTime * Speed);
 			if((transform.position - genParent.position).magnitude > ChildDistant){
+				originalPos = transform.localPosition;
 				emitting = false;
+
+				VirusValues.updateRadius(transform.position);
 				//gameObject.collider.isTrigger = false;
 			}
 		}
+		else{
+			Offset = GetComponent<Shaking> ().offset;
+			transform.localPosition = originalPos + Offset;
+		}
+
+		if(Value >= 50){
+			Grow();
+		}
+
+	}
+	public void GetValue(int v){
+		GameObject tmp;
+		//Debug.Log (gameObject.name + " GetValue: " + v);
+		if(!Growing && !emitting){
+			if(v>0){
+				GetComponent<Increasing>().playAnim();
+
+				tmp = Instantiate(text.gameObject, transform.position, Quaternion.identity) as GameObject;
+				tmp.GetComponent<PopScore>().SetText("+" + v.ToString(), VirusValues.UsedColor[GeneColor]);
+				tmp.SetActive(true);
+			}
+			else{
+				v = v + VirusValues.RedLevel * 2;
+				originalPos = transform.localPosition;
+				GetComponent<Shaking>().playAnim();
+
+				tmp = Instantiate(text.gameObject, transform.position, Quaternion.identity) as GameObject;
+				tmp.GetComponent<PopScore>().SetText(v.ToString(), VirusValues.UsedColor[3]);
+				tmp.SetActive(true);
+			}
+			Value += v;
+			VirusValues.GetValue(GeneColor, v);
+			if(Value <= 0){
+				StartDie ();
+			}
+		}
+		//There should be effect
+	}
+
+	public void GetValueWithoutScore(int v){
+		GameObject tmp;
+		//Debug.Log (gameObject.name + " GetValue: " + v);
+		if(!Growing && !emitting){
+			if(v>0){
+				GetComponent<Increasing>().playAnim();
+				
+//				tmp = Instantiate(text.gameObject, transform.position, Quaternion.identity) as GameObject;
+//				tmp.GetComponent<PopScore>().SetText("+" + v.ToString(), VirusValues.UsedColor[GeneColor]);
+//				tmp.SetActive(true);
+			}
+			else{
+//				v = v + VirusValues.RedLevel;
+//				if(v > 0){
+//					v = 0;
+//				}
+				originalPos = transform.localPosition;
+				GetComponent<Shaking>().playAnim();
+				
+//				tmp = Instantiate(text.gameObject, transform.position, Quaternion.identity) as GameObject;
+//				tmp.GetComponent<PopScore>().SetText(v.ToString(), VirusValues.UsedColor[3]);
+//				tmp.SetActive(true);
+			}
+			Value += v;
+			VirusValues.GetValue(GeneColor, v);
+			if(Value <= 0){
+				StartDie ();
+			}
+		}
+		//There should be effect
+	}
+
+	public void GetParentConnect(GameObject PConnect, float width){
+		WidthInit = width; 
+		Parents [Pcount++] = PConnect;
+	}
+	public float GetChildConnect(GameObject CConnect){
+		Children [Ccount++] = CConnect;
+		return WidthInit;
+	}
+	public void StartDie(){
+		if(!dying){
+			dying = true;
+			if(Value > 0)
+				GetValue(-Value);
+			for(int i = 0;i<Pcount;i++){
+				Parents[i].GetComponent<ConnectControl>().StartDie(1);
+			}
+			for(int i=0;i<Ccount;i++){
+				Children[i].GetComponent<ConnectControl>().StartDie(0);
+			}
+			Debug.Log ("StartDie: " + gameObject.name);
+			Destroy (gameObject);
+		}
+	}
+	public void ParentConnectDie(GameObject pc){
+		if (Pcount == 1){
+			Pcount = 0;
+			Debug.Log ("ParentDie: " + gameObject.name);
+			StartDie ();
+		}
+		else{
+			for(int i=0;i<Pcount-1;i++){
+				if(pc == Parents[i]){
+					Parents[i] = Parents[Pcount-1];
+					break;
+				}
+			}
+			if(Pcount > 0)
+				Pcount--;
+		}
+	}
+	public void ChildConnectDie(GameObject cc){
+		for(int i=0;i<Ccount-1;i++){
+			if(cc == Children[i]){
+				Children[i] = Children[Ccount-1];
+			}
+		}
+		if(Ccount>0)
+			Ccount--;
+	}
+	public void Reset(){
+		Pcount = 0;
+		Ccount = 0;
+		Growing = false;
+	}
+	void OnTriggerEnter(Collider c){
+		if(emitting){
+			if(c.tag == "GeneBase" && c.gameObject.transform != genParent){
+				if(c.gameObject.GetComponent<SingleJointBehavior>().GeneColor == GeneColor){
+					c.gameObject.GetComponent<SingleJointBehavior>().GetValueWithoutScore(Value);
+					if(checkOverlap(c.gameObject))
+						Parents[0].GetComponent<ConnectControl>().ResetConnect(c.gameObject);
+					else
+						StartDie();
+					//Destroy(gameObject);
+				}
+				else{
+					c.gameObject.GetComponent<SingleJointBehavior>().GetValueWithoutScore(-Value);
+					StartDie();
+					//Destroy(gameObject);
+				}
+			}
+		}
+	}
+	bool checkOverlap(GameObject target){
+		for(int i = 0;i<target.GetComponent<SingleJointBehavior>().Pcount;i++){
+			if(target.GetComponent<SingleJointBehavior>().Parents[i].GetComponent<ConnectControl>()._from){
+				if(target.GetComponent<SingleJointBehavior>().Parents[i].GetComponent<ConnectControl>()._from ==
+				   Parents[0].GetComponent<ConnectControl>()._from){
+					return false;
+				}
+			}
+		}
+		return true;
+	}
+	void GrowEnd(){
+		Growing = false;
 	}
 	public bool Emit(Vector3 dir, Transform parent){
 		//gameObject.collider.isTrigger = true;
 		genParent = parent;
+		//Vector3 dir = ChildDirection ();
 		RaycastHit hit;
-		if(!Physics.Raycast (parent.position + Vector3.Lerp(Vector3.zero, dir, 0.8f), dir, out hit, ChildDistant / 4f)){
+		if(!Physics.Raycast (parent.position + Vector3.Lerp(Vector3.zero, dir, 0.75f), dir, out hit, ChildDistant / 4f)){
 			emitting = true;
 			Direction = dir;
 			return true;
@@ -63,107 +226,19 @@ public class SingleJointBehavior : MonoBehaviour {
 			}
 		}
 	}
-	public void GetValue(int v){
-		//Debug.Log (gameObject.name + " GetValue: " + v);
-		if(!Growing){
-			Value += v;
-			if(Value <= 0){
-				StartDie ();
-			}
-		}
-		//There should be effect
-	}
-	public void GetParentConnect(GameObject PConnect, float width){
-		WidthInit = width; 
-		Parents [Pcount++] = PConnect;
-	}
-	public float GetChildConnect(GameObject CConnect){
-		Children [Ccount++] = CConnect;
-		return WidthInit;
-	}
-	public void StartDie(){
-		for(int i = 0;i<Pcount;i++){
-			Parents[i].GetComponent<ConnectControl>().StartDie(1);
-		}
-		for(int i=0;i<Ccount;i++){
-			Children[i].GetComponent<ConnectControl>().StartDie(0);
-		}
-		Debug.Log ("StartDie: " + gameObject.name);
-		Destroy (gameObject);
-	}
-	public void ParentConnectDie(GameObject pc){
-
-		if (Pcount == 1){
-			Pcount = 0;
-			Debug.Log ("ParentDie: " + gameObject.name);
-			StartDie ();
-		}
-		else{
-			for(int i=0;i<Pcount-1;i++){
-				if(pc == Parents[i]){
-					Parents[i] = Parents[Pcount-1];
-					break;
-				}
-			}
-			Pcount--;
-		}
-	}
-	public void ChildConnectDie(GameObject cc){
-		for(int i=0;i<Ccount-1;i++){
-			if(cc == Children[i]){
-				Children[i] = Children[Ccount-1];
-			}
-		}
-		Ccount--;
-	}
-	public void Reset(){
-		Pcount = 0;
-		Ccount = 0;
-		Growing = false;
-	}
-	void OnTriggerEnter(Collider c){
-		if(emitting){
-			if(c.tag == "GeneBase" && c.gameObject.transform != genParent){
-				if(c.gameObject.GetComponent<SingleJointBehavior>().GeneColor == GeneColor){
-					c.gameObject.GetComponent<SingleJointBehavior>().GetValue(Value);
-					if(checkOverlap(c.gameObject))
-						Parents[0].GetComponent<ConnectControl>().ResetConnect(c.gameObject);
-					else
-						StartDie();
-					//Destroy(gameObject);
-				}
-				else{
-					c.gameObject.GetComponent<SingleJointBehavior>().GetValue(-Value);
-					StartDie();
-					//Destroy(gameObject);
-				}
-			}
-		}
-	}
-	bool checkOverlap(GameObject target){
-		for(int i = 0;i<target.GetComponent<SingleJointBehavior>().Pcount;i++){
-			if(target.GetComponent<SingleJointBehavior>().Parents[i].GetComponent<ConnectControl>()._from ==
-			   Parents[0].GetComponent<ConnectControl>()._from){
-				return false;
-			}
-		}
-		return true;
-	}
-	void GrowEnd(){
-		Growing = false;
-	}
 	void Grow(){
 		Growing = true;
-		Value = 15;
-		Vector3 childPos = ChildDirection ();
+		Value -= 20;
 		temp = Instantiate (gameObject, transform.position, Quaternion.identity) as GameObject;
 		temp.transform.parent = GameObject.Find("Base").transform;
 		temp.GetComponent<SingleJointBehavior> ().Reset ();
 		int n = 0;
-		Invoke ("GrowEnd", 1);
-		while(n < 20){
-			if(temp.GetComponent<SingleJointBehavior> ().Emit (childPos, transform)){
-				 
+		while(n < 100){
+			Vector3 childPos = ChildDirection ();
+			if(temp.GetComponent<SingleJointBehavior>().Emit (childPos, transform)){
+				//temp.GetComponent<SingleJointBehavior>().genParent = transform;
+				//int n = 0;
+				Invoke ("GrowEnd", 1);
 				GameObject temp2 = Instantiate(Parents[0], transform.position + new Vector3(0, 0, -100), Quaternion.identity) as GameObject;
 				temp2.GetComponent<ConnectControl>().SetConnect(gameObject, temp);
 				Debug.Log ("CreateLine: " + temp2.name);
@@ -172,14 +247,14 @@ public class SingleJointBehavior : MonoBehaviour {
 			n++;
 		}
 		Destroy (temp);
-		Value = 20;
+		Value = 50;
 
 	}
 	Vector3 ChildDirection(){
 		Vector3 parentPos = transform.position;
 		float angle = Random.Range (-90f, 90f);
 		//Debug.Log (angle);
-		Vector3 baseVec = parentPos.normalized;
+		Vector3 baseVec = (transform.position - Parents[0].GetComponent<ConnectControl>()._from.transform.position).normalized;
 		float a = angle_360 (Vector3.right, baseVec);
 		//Debug.Log ("aOriginal: " + a);
 		a = a + angle;

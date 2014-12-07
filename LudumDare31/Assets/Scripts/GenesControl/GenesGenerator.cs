@@ -3,8 +3,8 @@ using System.Collections;
 
 public class GenesGenerator : MonoBehaviour {
 	public GameObject [] Genes = new GameObject[3];
-	public float InitRadius = 5f, LaunchSpeed = 5f, Interval;
-
+	public float InitRadius, LaunchRadius, LaunchSpeed;
+	public static float Interval = 3;
 	//-------------
 	GameObject temp;
 	bool ready;
@@ -15,11 +15,11 @@ public class GenesGenerator : MonoBehaviour {
 	
 	// Update is called once per frame
 	void Update () {
-//		if(ready){
-//			ready = false;
-//			launchGene(1);
-//			Invoke("cooldown", Interval);
-//		}
+		if(ready){
+			ready = false;
+			launchGene(1);
+			Invoke("cooldown", Interval);
+		}
 		if(Input.GetKeyDown("e")){
 			launchGene(1);
 		}
@@ -42,7 +42,8 @@ public class GenesGenerator : MonoBehaviour {
 		}
 	}
 	Vector3 LaunchDirection(Vector3 InitP){
-		float r = VirusValues.Radius;
+		float r = LaunchRadius;
+		r = VirusValues.Radius / 1.5f;
 		Vector3 centerDir = InitP;
 		Vector3 OrthoDir = new Vector3 (centerDir.y, -centerDir.x, 0).normalized;
 		return -(centerDir + OrthoDir * Random.Range(-r, r)).normalized;
