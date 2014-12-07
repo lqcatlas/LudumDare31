@@ -31,7 +31,7 @@ public class LevelControl : MonoBehaviour {
 		   bases[2].GetComponent<SingleJointBehavior>().Value < 50){
 			starting = true;
 			generator.GetComponent<GeneratorControl>().Startup();
-			Timer = 90;
+			Timer = 120;
 			Debug.Log ("Game Start");
 		}
 	}
