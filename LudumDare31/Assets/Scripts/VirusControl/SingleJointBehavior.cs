@@ -8,7 +8,7 @@ public class SingleJointBehavior : MonoBehaviour {
 	public Vector3 Direction;
 	public Transform genParent;
 	public PopScore text;
-	public GameObject deathFX;
+	public GameObject deathFX, growSFX, deathSFX;
 
 	public GameObject [] Children = new GameObject [10];
 	public GameObject [] Parents = new GameObject [5];
@@ -24,27 +24,26 @@ public class SingleJointBehavior : MonoBehaviour {
 	// Use this for initialization
 	void Start () {
 		originalPos = transform.position;
-		Value = 19;
+		Value = 25;
 		//radio = GameObject.FindWithTag ("EmitRadio");
 		potential = transform.GetChild (0);
 	}
 	
 	// Update is called once per frame
 	void Update () {
-		float scalar = 0.25f + Value / 50f;
+		float scalar = 0.25f + Value / 60f;
 		if(scalar > 1.25f){
 			scalar = 1.25f;
 		}
 		AnimScalar = GetComponent<Increasing> ().AnimScalar;
 		transform.localScale = new Vector3 (scalar, scalar, scalar) * AnimScalar;
-		potential.localScale = new Vector3 (1.2f/ scalar, 1.2f/ scalar, 1.2f/ scalar);
+		potential.localScale = new Vector3 (1f/ scalar, 1f/ scalar, 1f/ scalar);
 
 		if(emitting){
 			transform.Translate(Direction * Time.deltaTime * Speed);
 			if((transform.position - genParent.position).magnitude > ChildDistant){
 				originalPos = transform.localPosition;
 				emitting = false;
-
 				VirusValues.updateRadius(transform.position);
 				//gameObject.collider.isTrigger = false;
 			}
@@ -54,7 +53,7 @@ public class SingleJointBehavior : MonoBehaviour {
 			transform.localPosition = originalPos + Offset;
 		}
 
-		if(Value >= 50 && !Growing){
+		if(Value >= 60 && !Growing){
 			Grow();
 		}
 
@@ -71,19 +70,61 @@ public class SingleJointBehavior : MonoBehaviour {
 				tmp.SetActive(true);
 			}
 			else{
+				if(emitting){
+					v = v / 2;
+				}
 				v = v + VirusValues.BlueLevel * 2;
+				if(Value + v < 0){
+					v = -Value;
+				}
 				originalPos = transform.localPosition;
 				GetComponent<Shaking>().playAnim();
+				if(!emitting){
+					tmp = Instantiate(text.gameObject, transform.position, Quaternion.identity) as GameObject;
+					tmp.GetComponent<PopScore>().SetText(v.ToString(), VirusValues.UsedColor[3]);
+					tmp.SetActive(true);
+				}
+			}
+			Value += v;
+			VirusValues.GetValue(GeneColor, v);
+
+			if(Value <= 0){
+				StartDie ();
+			}
+		//}
+		//There should be effect
+	}
+	public void GetValueWithoutArmor(int v){
+		GameObject tmp;
+		//Debug.Log (gameObject.name + " GetValue: " + v);
+		//if(!Growing && !emitting){
+		if(v>0){
+			GetComponent<Increasing>().playAnim();
+			
+			tmp = Instantiate(text.gameObject, transform.position, Quaternion.identity) as GameObject;
+			tmp.GetComponent<PopScore>().SetText("+" + v.ToString(), VirusValues.UsedColor[GeneColor]);
+			tmp.SetActive(true);
+		}
+		else{
+			if(emitting){
+				v = v /2;
+			}
+			//v = v + VirusValues.BlueLevel * 2;
+			if(Value + v < 0){
+				v = -Value;
+			}
+			originalPos = transform.localPosition;
+			GetComponent<Shaking>().playAnim();
 
 				tmp = Instantiate(text.gameObject, transform.position, Quaternion.identity) as GameObject;
 				tmp.GetComponent<PopScore>().SetText(v.ToString(), VirusValues.UsedColor[3]);
 				tmp.SetActive(true);
-			}
-			Value += v;
-			VirusValues.GetValue(GeneColor, v);
-			if(Value <= 0){
-				StartDie ();
-			}
+		}
+		Value += v;
+		VirusValues.GetValue(GeneColor, v);
+		if(Value <= 0){
+			StartDie ();
+		}
 		//}
 		//There should be effect
 	}
@@ -112,7 +153,7 @@ public class SingleJointBehavior : MonoBehaviour {
 //				tmp.SetActive(true);
 			}
 			Value += v;
-			VirusValues.GetValue(GeneColor, v);
+			//VirusValues.GetValue(GeneColor, v);
 			if(Value <= 0){
 				StartDie ();
 			}
@@ -122,6 +163,9 @@ public class SingleJointBehavior : MonoBehaviour {
 
 	public void GetParentConnect(GameObject PConnect, float width){
 		WidthInit = width; 
+		if (Pcount >= 4) {
+						Pcount --;
+				}
 		Parents [Pcount++] = PConnect;
 	}
 	public float GetChildConnect(GameObject CConnect){
@@ -132,7 +176,7 @@ public class SingleJointBehavior : MonoBehaviour {
 		if(!dying){
 			dying = true;
 			if(Value > 0)
-				GetValue(-Value);
+				GetValueWithoutArmor(-Value);
 			for(int i = 0;i<Pcount;i++){
 				Parents[i].GetComponent<ConnectControl>().StartDie(1);
 			}
@@ -140,8 +184,11 @@ public class SingleJointBehavior : MonoBehaviour {
 				Children[i].GetComponent<ConnectControl>().StartDie(0);
 			}
 			//Debug.Log ("StartDie: " + gameObject.name);
-			GameObject tmp = Instantiate (deathFX, transform.position, Quaternion.identity) as GameObject;
-			tmp.GetComponent<DeathFX> ().FX ();
+			if(!emitting){
+				GameObject tmp = Instantiate (deathFX, transform.position, Quaternion.identity) as GameObject;
+				tmp.GetComponent<DeathFX> ().FX ();
+				(Instantiate(deathSFX) as GameObject).SetActive(true);
+			}
 			Destroy (gameObject);
 		}
 	}
@@ -180,7 +227,7 @@ public class SingleJointBehavior : MonoBehaviour {
 		if(emitting){
 			if(c.tag == "GeneBase" && c.gameObject.transform != genParent){
 				if(c.gameObject.GetComponent<SingleJointBehavior>().GeneColor == GeneColor){
-					c.gameObject.GetComponent<SingleJointBehavior>().GetValue(Value);
+					c.gameObject.GetComponent<SingleJointBehavior>().GetValue(Value/2);
 					if(checkOverlap(c.gameObject))
 						Parents[0].GetComponent<ConnectControl>().ResetConnect(c.gameObject);
 					else
@@ -197,7 +244,9 @@ public class SingleJointBehavior : MonoBehaviour {
 	}
 	bool checkOverlap(GameObject target){
 		for(int i = 0;i<target.GetComponent<SingleJointBehavior>().Pcount;i++){
-			if(target.GetComponent<SingleJointBehavior>().Parents[i]){
+			if(target.GetComponent<SingleJointBehavior>().Parents[i]
+			   && target.GetComponent<SingleJointBehavior>().Parents[i].GetComponent<ConnectControl>()._from
+			   ){
 				if(target.GetComponent<SingleJointBehavior>().Parents[i].GetComponent<ConnectControl>()._from ==
 				   Parents[0].GetComponent<ConnectControl>()._from){
 					return false;
@@ -214,7 +263,7 @@ public class SingleJointBehavior : MonoBehaviour {
 		genParent = parent;
 		//Vector3 dir = ChildDirection ();
 		RaycastHit hit;
-		if(!Physics.Raycast (parent.position + Vector3.Lerp(Vector3.zero, dir, 0.75f), dir, out hit, ChildDistant / 4f)){
+		if(!Physics.Raycast (parent.position + Vector3.Lerp(Vector3.zero, dir, 0.75f), dir, out hit, ChildDistant / 2f)){
 			emitting = true;
 			Direction = dir;
 			return true;
@@ -244,6 +293,7 @@ public class SingleJointBehavior : MonoBehaviour {
 				//temp.GetComponent<SingleJointBehavior>().genParent = transform;
 				//int n = 0;
 				Invoke ("GrowEnd", 1.5f);
+				(Instantiate(growSFX) as GameObject).SetActive(true);
 				GameObject temp2 = Instantiate(Parents[0], transform.position + new Vector3(0, 0, -100), Quaternion.identity) as GameObject;
 				temp2.GetComponent<ConnectControl>().SetConnect(gameObject, temp);
 				Debug.Log ("CreateLine: " + temp2.name);
